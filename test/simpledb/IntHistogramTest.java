@@ -174,5 +174,6 @@ public class IntHistogramTest {
 		// Be conservative in case of alternate implementations
 		Assert.assertTrue(h.estimateSelectivity(Op.NOT_EQUALS, 3) < 0.001);
 		Assert.assertTrue(h.estimateSelectivity(Op.NOT_EQUALS, 8) > 0.01);
+		// ??
 	}
 }

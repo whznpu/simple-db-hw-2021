@@ -4,6 +4,7 @@ import simpledb.common.Type;
 import simpledb.storage.DbFile;
 import simpledb.storage.HeapFile;
 import simpledb.storage.TupleDesc;
+import simpledb.storage.Table;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,8 +28,19 @@ public class Catalog {
      * Constructor.
      * Creates a new, empty catalog.
      */
+    /**
+     * 理论上用TableList 也可以 但是使用map速度更快一些
+     */
+    ConcurrentHashMap<Integer,Table> tableIdMap;
+
+    ConcurrentHashMap<String,Integer> tableNameMap;
+
+
+
     public Catalog() {
         // some code goes here
+        tableIdMap =new ConcurrentHashMap<>();
+        tableNameMap =new ConcurrentHashMap<>();
     }
 
     /**
@@ -42,6 +54,8 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
+        tableIdMap.put(file.getId(), new Table(file,name,pkeyField));
+        tableNameMap.put(name,file.getId());
     }
 
     public void addTable(DbFile file, String name) {
@@ -65,7 +79,15 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        return 0;
+        if(name==null){
+            throw new NoSuchElementException(" the table doesn't exist");
+        }
+        Integer tableId=tableNameMap.get(name);
+
+        if(tableId==null){
+            throw new NoSuchElementException(" the table doesn't exist");
+        }
+        return tableId.intValue();
     }
 
     /**
@@ -75,8 +97,12 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        Table t=tableIdMap.get(tableid);
+        if(t==null)
+        {
+            throw new NoSuchElementException("The table doesn't exit");
+        }
+        return t.getDbFile().getTupleDesc();
     }
 
     /**
@@ -87,27 +113,46 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        Table t=tableIdMap.get(tableid);
+        if(t==null){
+            throw new NoSuchElementException("the table doesn't exist");
+        }
+
+        return t.getDbFile();
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
-        return null;
+        Table t=tableIdMap.get(tableid);
+        if(t==null){
+            throw new NoSuchElementException("the table doesn't exist");
+        }
+
+        return t.getPkeyField();
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
+
+
         return null;
     }
 
     public String getTableName(int id) {
         // some code goes here
-        return null;
+        Table t=tableIdMap.get(id);
+        if(t==null){
+            throw new NoSuchElementException("the table doesn't exist");
+        }
+
+        return t.getName();
     }
     
     /** Delete all tables from the catalog */
     public void clear() {
         // some code goes here
+        tableIdMap.clear();
+        tableNameMap.clear();
     }
     
     /**

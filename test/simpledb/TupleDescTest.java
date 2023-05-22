@@ -94,6 +94,7 @@ public class TupleDescTest extends SimpleDbTestBase {
             // Make sure you retrieve well-named fields
             TupleDesc td = Utility.getTupleDesc(len, prefix);
             for (int i = 0; i < len; ++i) {
+//                System.out.println(prefix+i);
                 assertEquals(i, td.fieldNameToIndex(prefix + i));
             }
             
@@ -159,7 +160,9 @@ public class TupleDescTest extends SimpleDbTestBase {
 
         // .equals() with the wrong type should return false
         assertNotEquals(singleInt, new Object());
-
+        assertEquals(1,1);
+        boolean r=singleInt.equals(singleInt);
+        System.out.println(r);
         assertEquals(singleInt, singleInt);
         assertEquals(singleInt, singleInt2);
         assertEquals(singleInt2, singleInt);

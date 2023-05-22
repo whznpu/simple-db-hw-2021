@@ -29,25 +29,40 @@ public class Delete extends Operator {
      * @param child
      *            The child operator from which to read tuples for deletion
      */
+    private final TransactionId t;
+    private OpIterator child;
+
+    private int dirtyNums;
+    private boolean hasNextFlag;
     public Delete(TransactionId t, OpIterator child) {
         // some code goes here
+        this.t=t;
+        this.child=child;
+        this.dirtyNums=0;
+        this.hasNextFlag=true;
+
     }
 
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return new TupleDesc(new Type[]{Type.INT_TYPE});
     }
 
     public void open() throws DbException, TransactionAbortedException {
         // some code goes here
+        super.open();
+        child.open();
     }
 
     public void close() {
         // some code goes here
+        child.close();
+        super.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
         // some code goes here
+        child.rewind();
     }
 
     /**
@@ -61,18 +76,39 @@ public class Delete extends Operator {
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+        if(!hasNextFlag){
+            return null;
+        }
+
+        hasNextFlag=false;
+        while (child.hasNext()){
+            Tuple tuple=child.next();
+            try {
+                dirtyNums++;
+                Database.getBufferPool().deleteTuple(t,tuple);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        Tuple dirtyTupleNums = new Tuple(getTupleDesc());
+        dirtyTupleNums.setField(0,new IntField(dirtyNums));
+        return dirtyTupleNums;
     }
 
     @Override
     public OpIterator[] getChildren() {
         // some code goes here
-        return null;
+//        return null;
+        return new OpIterator[]{this.child};
     }
+
 
     @Override
     public void setChildren(OpIterator[] children) {
         // some code goes here
+        if(this.child!=children[0]){
+            this.child=children[0];
+        }
     }
 
 }

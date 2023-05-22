@@ -1,7 +1,8 @@
 package simpledb.storage;
 
+import java.io.File;
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -9,9 +10,15 @@ import java.util.Iterator;
  * specified schema specified by a TupleDesc object and contain Field objects
  * with the data for each field.
  */
+
 public class Tuple implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private final TupleDesc td;
+    private ArrayList<Field> fieldList;
+
+    private RecordId rid;
 
     /**
      * Create a new tuple with the specified schema (type).
@@ -22,6 +29,9 @@ public class Tuple implements Serializable {
      */
     public Tuple(TupleDesc td) {
         // some code goes here
+        this.td=td;
+        fieldList= new ArrayList<>();
+
     }
 
     /**
@@ -29,7 +39,7 @@ public class Tuple implements Serializable {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return td;
     }
 
     /**
@@ -38,7 +48,8 @@ public class Tuple implements Serializable {
      */
     public RecordId getRecordId() {
         // some code goes here
-        return null;
+        return this.rid;
+//        return null;
     }
 
     /**
@@ -49,6 +60,7 @@ public class Tuple implements Serializable {
      */
     public void setRecordId(RecordId rid) {
         // some code goes here
+        this.rid=rid;
     }
 
     /**
@@ -61,6 +73,13 @@ public class Tuple implements Serializable {
      */
     public void setField(int i, Field f) {
         // some code goes here
+        if(i>fieldList.size()+1){
+            throw new UnsupportedOperationException("The i in invalid");
+        }else if(i==fieldList.size()) {
+            fieldList.add(f);
+        }else{
+            fieldList.set(i,f);
+        }
     }
 
     /**
@@ -71,7 +90,7 @@ public class Tuple implements Serializable {
      */
     public Field getField(int i) {
         // some code goes here
-        return null;
+        return fieldList.get(i);
     }
 
     /**
@@ -84,7 +103,13 @@ public class Tuple implements Serializable {
      */
     public String toString() {
         // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+        String res="";
+        for(Field f :fieldList){
+            res+=f.toString();
+            res+="\t";
+        }
+        return res;
+//        throw new UnsupportedOperationException("Implement this");
     }
 
     /**
@@ -93,15 +118,35 @@ public class Tuple implements Serializable {
      * */
     public Iterator<Field> fields()
     {
+        int size=fieldList.size();
+
         // some code goes here
-        return null;
+        /**
+         * 匿名内部类
+         * @return
+         */
+        return new Iterator<Field>() {
+            private int current =-1;
+            @Override
+            public boolean hasNext() {
+                return current +1<size;
+            }
+
+            @Override
+            public Field next() {
+                current++;
+                return fieldList.get(current);
+            }
+        };
+//        return null;
     }
 
     /**
      * reset the TupleDesc of this tuple (only affecting the TupleDesc)
      * */
-    public void resetTupleDesc(TupleDesc td)
-    {
-        // some code goes here
-    }
+//    public void resetTupleDesc(TupleDesc td)
+//    {
+//        this.td=td;
+//        // some code goes here
+//    }
 }

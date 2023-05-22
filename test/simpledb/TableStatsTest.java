@@ -65,7 +65,11 @@ public class TableStatsTest extends SimpleDbTestBase {
 			ioCosts[i] = 1;
 			pageNums[i] = 3*(i+1);
 		}
+		long start=System.currentTimeMillis();
 		double[] stats = getRandomTableScanCosts(pageNums, ioCosts);
+		long end=System.currentTimeMillis();
+		System.out.println("Part1: "+(end-start));
+
 		ret = SystemTestUtil.checkConstant(stats);
 		Assert.assertEquals(ret[0], Boolean.FALSE);
 		ret = SystemTestUtil.checkLinear(stats);
@@ -75,7 +79,11 @@ public class TableStatsTest extends SimpleDbTestBase {
 			ioCosts[i] = 10*(i + 1);
 			pageNums[i] = 3;
 		}
+		start=System.currentTimeMillis();
 		stats = getRandomTableScanCosts(pageNums, ioCosts);
+		end=System.currentTimeMillis();
+		System.out.println("Part2: "+(end-start));
+
 		ret = SystemTestUtil.checkConstant(stats);
 		Assert.assertEquals(ret[0], Boolean.FALSE);
 		ret = SystemTestUtil.checkLinear(stats);
@@ -85,7 +93,10 @@ public class TableStatsTest extends SimpleDbTestBase {
 			ioCosts[i] = 3*(i + 1);
 			pageNums[i] = (i+1);
 		}
+		start=System.currentTimeMillis();
 		stats = getRandomTableScanCosts(pageNums, ioCosts);
+		end=System.currentTimeMillis();
+		System.out.println("Part3: "+(end-start));
 		ret = SystemTestUtil.checkConstant(stats);
 		Assert.assertEquals(ret[0], Boolean.FALSE);
 		ret = SystemTestUtil.checkLinear(stats);

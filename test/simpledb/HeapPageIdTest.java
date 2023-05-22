@@ -55,10 +55,14 @@ public class HeapPageIdTest extends SimpleDbTestBase {
      * Unit test for HeapPageId.equals()
      */
     @Test public void equals() {
+
+        long start=System.currentTimeMillis();
         HeapPageId pid1 = new HeapPageId(1, 1);
         HeapPageId pid1Copy = new HeapPageId(1, 1);
         HeapPageId pid2 = new HeapPageId(2, 2);
+        long end=System.currentTimeMillis();
 
+        System.out.println("Time :"+(end-start));
         // .equals() with null should return false
         assertNotEquals(null, pid1);
 

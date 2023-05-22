@@ -1,6 +1,7 @@
 package simpledb.execution;
 
 import simpledb.common.DbException;
+import simpledb.common.Type;
 import simpledb.storage.Tuple;
 import simpledb.storage.TupleDesc;
 import simpledb.transaction.TransactionAbortedException;
@@ -30,8 +31,52 @@ public class Aggregate extends Operator {
      *               there is no grouping
      * @param aop    The aggregation operator to use
      */
+    private OpIterator child;
+    private final int afield;
+    private final int gfield;
+
+    private final Aggregator.Op aop;
     public Aggregate(OpIterator child, int afield, int gfield, Aggregator.Op aop) {
         // some code goes here
+        // child 是经过聚合后的child 构造时需要调用merge方法
+        // check afield's type
+        Type aFieldType=child.getTupleDesc().getFieldType(afield);
+        Type gbFieldType = null;
+        if(gfield!=Aggregator.NO_GROUPING) {
+             gbFieldType= child.getTupleDesc().getFieldType(gfield);
+        }
+        try {
+            child.open();
+        } catch (DbException | TransactionAbortedException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(aFieldType==Type.INT_TYPE){
+            IntegerAggregator agg= new IntegerAggregator(gfield,gbFieldType,afield,aop);
+            while(true){
+                try {
+                    if (!child.hasNext()) break;
+                    agg.mergeTupleIntoGroup(child.next());
+                } catch (DbException | TransactionAbortedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            this.child= agg.iterator();
+        }else{
+            StringAggregator agg= new StringAggregator(gfield,gbFieldType,afield,aop);
+            while(true){
+                try {
+                    if (!child.hasNext()) break;
+                    agg.mergeTupleIntoGroup(child.next());
+                } catch (DbException | TransactionAbortedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            this.child= agg.iterator();
+        }
+        this.afield=afield;
+        this.gfield=gfield;
+        this.aop=aop;
     }
 
     /**
@@ -41,8 +86,11 @@ public class Aggregate extends Operator {
      */
     public int groupField() {
         // some code goes here
-        return -1;
+//        return -1;
+//        if(gfield==Aggregator.NO_GROUPING)
+        return gfield;
     }
+
 
     /**
      * @return If this aggregate is accompanied by a group by, return the name
@@ -51,7 +99,9 @@ public class Aggregate extends Operator {
      */
     public String groupFieldName() {
         // some code goes here
-        return null;
+//        return null;
+
+        return gfield==Aggregator.NO_GROUPING?null:child.getTupleDesc().getFieldName(gfield);
     }
 
     /**
@@ -59,7 +109,8 @@ public class Aggregate extends Operator {
      */
     public int aggregateField() {
         // some code goes here
-        return -1;
+        return afield;
+//        return -1;
     }
 
     /**
@@ -68,7 +119,8 @@ public class Aggregate extends Operator {
      */
     public String aggregateFieldName() {
         // some code goes here
-        return null;
+        return child.getTupleDesc().getFieldName(afield);
+//        return null;
     }
 
     /**
@@ -76,7 +128,8 @@ public class Aggregate extends Operator {
      */
     public Aggregator.Op aggregateOp() {
         // some code goes here
-        return null;
+        return aop;
+//        return null;
     }
 
     public static String nameOfAggregatorOp(Aggregator.Op aop) {
@@ -86,6 +139,10 @@ public class Aggregate extends Operator {
     public void open() throws NoSuchElementException, DbException,
             TransactionAbortedException {
         // some code goes here
+        child.open();
+        super.open();
+//        this.open=true;
+
     }
 
     /**
@@ -97,11 +154,17 @@ public class Aggregate extends Operator {
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+        if(child.hasNext()){
+            return child.next();
+        }else{
+            return  null;
+        }
+//        return null;
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
         // some code goes here
+        child.rewind();
     }
 
     /**
@@ -117,22 +180,29 @@ public class Aggregate extends Operator {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return child.getTupleDesc();
+//        return null;
     }
 
     public void close() {
         // some code goes here
+        child.close();
+        super.close();
     }
 
     @Override
     public OpIterator[] getChildren() {
         // some code goes here
-        return null;
+        return new OpIterator[]{this.child};
+//        return null;
     }
 
     @Override
     public void setChildren(OpIterator[] children) {
         // some code goes here
+        if(this.child!=children[0]){
+            this.child=children[0];
+        }
     }
 
 }

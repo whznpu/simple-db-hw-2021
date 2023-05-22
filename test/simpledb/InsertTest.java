@@ -9,6 +9,7 @@ import junit.framework.JUnit4TestAdapter;
 import simpledb.common.Utility;
 import simpledb.execution.Insert;
 import simpledb.execution.OpIterator;
+import simpledb.storage.Tuple;
 import simpledb.storage.TupleDesc;
 import simpledb.transaction.TransactionId;
 
@@ -53,8 +54,9 @@ public class InsertTest extends TestUtil.CreateHeapFile {
   @Test public void getNext() throws Exception {
     Insert op = new Insert(tid,scan1, empty.getId());
     op.open();
+    Tuple test=Utility.getHeapTuple(7, 1);
     assertTrue(TestUtil.compareTuples(
-        Utility.getHeapTuple(7, 1), // the length of scan1
+        test, // the length of scan1
         op.next()));
 
     // we should fit on one page

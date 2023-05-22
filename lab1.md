@@ -349,7 +349,6 @@ does not have:
 * (In this lab) Indices.
 
 <p>
-
 In the rest of this Section, we describe each of the main components of SimpleDB that you will need to implement in this
 lab. You should use the exercises in this discussion to guide your implementation. This document is by no means a
 complete specification for SimpleDB; you will need to make decisions about how to design and implement various parts of
@@ -402,7 +401,7 @@ using `Database.getBufferPool()`).
 
 * src/java/simpledb/common/Catalog.java
 
-*** 
+***
 
 At this point, your code should pass the unit tests in CatalogTest.
 
@@ -542,7 +541,7 @@ disk.
 
 * src/java/simpledb/storage/HeapFile.java
 
-*** 
+***
 
 To read a page from disk, you will first need to calculate the correct offset in the file. Hint: you will need random
 access to the file in order to read and write pages at arbitrary offsets. You should not call BufferPool methods when

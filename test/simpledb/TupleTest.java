@@ -35,9 +35,16 @@ public class TupleTest extends SimpleDbTestBase {
      * Unit test for Tuple.getTupleDesc()
      */
     @Test public void getTupleDesc() {
+//        long start=System.currentTimeMillis();
         TupleDesc td = Utility.getTupleDesc(5);
+//        long end=System.currentTimeMillis();
+//        System.out.println("time: "+(end-start));
+//        start=System.currentTimeMillis();
         Tuple tup = new Tuple(td);
-        assertEquals(td, tup.getTupleDesc());
+        TupleDesc td2=tup.getTupleDesc();
+//        end=System.currentTimeMillis();
+//        System.out.println("time: "+(end-start));
+        assertEquals(td, td2);
     }
 
     /**

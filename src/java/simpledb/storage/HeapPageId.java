@@ -1,5 +1,7 @@
 package simpledb.storage;
 
+import java.util.Objects;
+
 /** Unique identifier for HeapPage objects. */
 public class HeapPageId implements PageId {
 
@@ -10,14 +12,19 @@ public class HeapPageId implements PageId {
      * @param tableId The table that is being referenced
      * @param pgNo The page number in that table.
      */
+    private final int tableId;
+    private final int pgNo;
     public HeapPageId(int tableId, int pgNo) {
         // some code goes here
+        this.tableId=tableId;
+        this.pgNo=pgNo;
     }
 
     /** @return the table associated with this PageId */
     public int getTableId() {
         // some code goes here
-        return 0;
+
+        return this.tableId;
     }
 
     /**
@@ -26,31 +33,25 @@ public class HeapPageId implements PageId {
      */
     public int getPageNumber() {
         // some code goes here
-        return 0;
+        return this.pgNo;
     }
 
-    /**
-     * @return a hash code for this page, represented by a combination of
-     *   the table number and the page number (needed if a PageId is used as a
-     *   key in a hash table in the BufferPool, for example.)
-     * @see BufferPool
-     */
-    public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-    }
-
-    /**
-     * Compares one PageId to another.
-     *
-     * @param o The object to compare against (must be a PageId)
-     * @return true if the objects are equal (e.g., page numbers and table
-     *   ids are the same)
-     */
     public boolean equals(Object o) {
         // some code goes here
+        if (o instanceof PageId) {
+            PageId pageId = (PageId) o;
+            if (this.tableId == pageId.getTableId() && this.pgNo == pageId.getPageNumber()) {
+                return true;
+            }
+        }
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tableId, pgNo);
+    }
+
 
     /**
      *  Return a representation of this object as an array of

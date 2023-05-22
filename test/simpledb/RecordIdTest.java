@@ -34,6 +34,7 @@ public class RecordIdTest extends SimpleDbTestBase {
      */
     @Test public void getPageId() {
         HeapPageId hpid = new HeapPageId(-1, 2);
+        System.out.println(hrid.getPageId());
         assertEquals(hpid, hrid.getPageId());
 
     }
