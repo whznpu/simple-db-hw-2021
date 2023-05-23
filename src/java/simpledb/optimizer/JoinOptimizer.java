@@ -190,17 +190,13 @@ public class JoinOptimizer {
                 }
                 break;
             case NOT_EQUALS:
+
+                return card1*card2-
+                        estimateTableJoinCardinality(Predicate.Op.EQUALS,
+                                table1Alias,table2Alias,field1PureName,
+                                field2PureName,card1,card2,
+                                t1pkey,t2pkey,stats,tableAliasToId);
                 // 记录总数-等值记录数
-                if (t1pkey && !t2pkey) {
-                    card = card1 * card2 - card2;
-                } else if (!t1pkey && t2pkey) {
-                    card = card1 * card2 - card1;
-                } else if (t1pkey && t2pkey) {
-                    card = card1 * card2 - Math.min(card1, card2);
-                } else {
-                    card = card1 * card2 - Math.max(card1, card2);
-                }
-                break;
             default:
                 // 其他记录按范围查询计算
                 card = (int) (0.3 * card1 * card2);
@@ -220,24 +216,48 @@ public class JoinOptimizer {
      */
     public <T> Set<Set<T>> enumerateSubsets(List<T> v, int size) {
         Set<Set<T>> els = new HashSet<>();
-        els.add(new HashSet<>());
-        // Iterator<Set> it;
-        // long start = System.currentTimeMillis();
-
-        for (int i = 0; i < size; i++) {
-            Set<Set<T>> newels = new HashSet<>();
-            for (Set<T> s : els) {
-                for (T t : v) {
-                    Set<T> news = new HashSet<>(s);
-                    if (news.add(t))
-                        newels.add(news);
-                }
-            }
-            els = newels;
-        }
+//
+//        Set<T> path= new HashSet<>();
+//
+//
+//
+////        els.add(new HashSet<>());
+//        // Iterator<Set> it;
+//        // long start = System.currentTimeMillis();
+//
+//        for (int i = 0; i < size; i++) {
+//            Set<Set<T>> newels = new HashSet<>();
+//            for (Set<T> s : els) {
+//                for (T t : v) {
+//                    Set<T> news = new HashSet<>(s);
+//                    if (news.add(t))
+//                        newels.add(news);
+//                }
+//            }
+//            els = newels;
+//        }
+        Stack<Integer> temp= new Stack<>();
+        dfs(v,0,v.size(),size,temp,els);
 
         return els;
 
+    }
+
+
+    public <T> void dfs(List<T> v,int cur,int n,int k,Stack<Integer> temp,Set<Set<T>> res){
+        if(temp.size()==k) {
+            Set<T> newSet=new HashSet<>();
+            for(Integer i:temp){
+                newSet.add(v.get(i));
+            }
+            res.add(newSet);
+            return;
+        }
+        for(int i=cur;i<n-(k-temp.size())+1;i++){
+            temp.push(i);
+            dfs(v,i+1,n,k,temp,res);
+            temp.pop();
+        }
     }
 
     /**
