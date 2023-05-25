@@ -216,29 +216,8 @@ public class JoinOptimizer {
      */
     public <T> Set<Set<T>> enumerateSubsets(List<T> v, int size) {
         Set<Set<T>> els = new HashSet<>();
-//
-//        Set<T> path= new HashSet<>();
-//
-//
-//
-////        els.add(new HashSet<>());
-//        // Iterator<Set> it;
-//        // long start = System.currentTimeMillis();
-//
-//        for (int i = 0; i < size; i++) {
-//            Set<Set<T>> newels = new HashSet<>();
-//            for (Set<T> s : els) {
-//                for (T t : v) {
-//                    Set<T> news = new HashSet<>(s);
-//                    if (news.add(t))
-//                        newels.add(news);
-//                }
-//            }
-//            els = newels;
-//        }
         Stack<Integer> temp= new Stack<>();
         dfs(v,0,v.size(),size,temp,els);
-
         return els;
 
     }

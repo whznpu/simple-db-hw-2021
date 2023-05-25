@@ -123,11 +123,8 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
-
         int bucketId=(v-min)/offset;
         if(v==max) bucketId--;
-
-
         double selectivityCount=0;
         if(op== Predicate.Op.EQUALS){
             if(v>currentMax||v<currentMin) return 0;

@@ -71,14 +71,18 @@ public class HeapFile implements DbFile {
         @Override
         public void open() throws DbException, TransactionAbortedException {
             pageId=0;
-            while (pageId< file.numPages()&&getTupleIterator(pageId)==null){
+            it=getTupleIterator(pageId);
+            while (pageId< file.numPages()&&it==null){
                 pageId++;
+                if(pageId== file.numPages()){
+                    break;
+                }
+                it=getTupleIterator(pageId);
             }
             if(pageId== file.numPages()){
                 it=null;
-                return;
             }
-            it=getTupleIterator(pageId);
+
         }
 
         @Override
@@ -252,6 +256,8 @@ public class HeapFile implements DbFile {
                 page.markDirty(true, tid);
                 pageList.add(page);
                 return pageList;
+            }else{
+                Database.getBufferPool().unsafeReleasePage(tid,pid);
             }
         }
         // then adding new page to the file
