@@ -103,7 +103,7 @@ public class BufferPool {
         isacquired=lockManager.getLock(tid,pid,lockType);
         while(!isacquired){
             long now=System.currentTimeMillis();
-            if(now-st>50){
+            if(now-st>200){
                 for(TransactionId owner:lockManager.getCurrentOwners(pid)){
                     g.add_edge(tid,owner);
                 }
