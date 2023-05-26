@@ -4,11 +4,9 @@ import simpledb.common.Database;
 import simpledb.common.Permissions;
 import simpledb.common.DbException;
 import simpledb.common.DeadlockException;
-import simpledb.transaction.Lock;
-import simpledb.transaction.LockManager;
-import simpledb.transaction.TransactionAbortedException;
-import simpledb.transaction.TransactionId;
+import simpledb.transaction.*;
 
+import javax.swing.undo.CannotUndoException;
 import java.io.*;
 
 import java.util.*;
@@ -38,15 +36,16 @@ public class BufferPool {
     public static final int DEFAULT_PAGES = 50;
 
     private final int numPages;
+    private Graph g;
 
 //    LinkedList<Page> pageList;
 
 
 
-    private Map<PageId,Page> pageCache;
+    private ConcurrentHashMap<PageId,Page> pageCache;
 
 
-    private LinkedList<PageId> pageList;
+    private ConcurrentLinkedDeque<PageId> pageList;
 
     private LockManager lockManager;
 
@@ -60,9 +59,10 @@ public class BufferPool {
         // some code goes here
 //        pageList= new LinkedList<Page>();
         this.numPages=numPages;
-        this.pageList=new LinkedList<>();
-        this.pageCache= new HashMap<>();
+        this.pageList=new ConcurrentLinkedDeque<>();
+        this.pageCache= new ConcurrentHashMap<>();
         this.lockManager = new LockManager();
+        this.g= new Graph();
     }
 
     
@@ -100,16 +100,24 @@ public class BufferPool {
         Lock.LockType lockType=perm==Permissions.READ_ONLY? Lock.LockType.SHARING: Lock.LockType.EXCLUSIVE;
         long st=System.currentTimeMillis();
         boolean isacquired= false;
+        isacquired=lockManager.getLock(tid,pid,lockType);
         while(!isacquired){
-            isacquired=lockManager.getLock(tid,pid,lockType);
             long now=System.currentTimeMillis();
             if(now-st>50){
-                throw new TransactionAbortedException();
+                for(TransactionId owner:lockManager.getCurrentOwners(pid)){
+                    g.add_edge(tid,owner);
+                }
+                if(!g.topological_sort()) {
+                    // must have a circle
+                    // abort itself
+                    System.out.println("有环解环 abort tid:"+tid.getId()   );
+                    g.delete_edge(tid);
+                    throw new TransactionAbortedException();
+                }
             }
+            isacquired=lockManager.getLock(tid,pid,lockType);
         }
-        if(isacquired){
-            System.out.println("Transaction :"+tid.getId()+" get the "+lockType.toString()+"lock on page:"+pid.getPageNumber());
-        }
+        System.out.println("Transaction :"+tid.getId()+" get the "+lockType.toString()+"lock on page:"+pid.getPageNumber());
 
         if(pageCache.containsKey(pid)){
 //            assert (pageCache.size()==pageList.size());
@@ -125,9 +133,7 @@ public class BufferPool {
             // get new page from disk
             DbFile file =Database.getCatalog().getDatabaseFile(pid.getTableId());
             Page page=file.readPage(pid);
-
             pageList.offer(pid);
-
             pageCache.put(pid,page);
             return page;
         }
@@ -190,8 +196,8 @@ public class BufferPool {
             // and read them form the disk
             restorePages(tid);
         }
+//        g.delete_edge(tid);
         assert (pageCache.size()==pageList.size());
-
     }
 
     public synchronized void restorePages(TransactionId tid){
@@ -337,7 +343,6 @@ public class BufferPool {
             flushPage(pid);
             lockManager.releaseLock(tid,pid);
         }
-
     }
 
     /**
@@ -347,7 +352,6 @@ public class BufferPool {
     private synchronized  void evictPage() throws DbException {
         // some code goes here
         // not necessary for lab1
-
         for(PageId vicim:pageList){
             if(pageCache.get(vicim).isDirty()==null){
                 discardPage(vicim);
@@ -358,7 +362,6 @@ public class BufferPool {
             }
         }
         throw  new DbException("All dirty");
-
     }
 
 }

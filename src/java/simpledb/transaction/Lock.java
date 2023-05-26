@@ -33,9 +33,7 @@ public class Lock {
     public LockType getLockType(){
         return this.lockType;
     }
-
     public void updateType(){
-
         if(lockType==LockType.SHARING){
             lockType=LockType.EXCLUSIVE;
         }

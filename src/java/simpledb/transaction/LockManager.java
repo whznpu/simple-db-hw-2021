@@ -15,16 +15,9 @@ public class LockManager {
          public LockEntry(){
             this.owners= new ConcurrentHashMap<>();
         }
-
-//        private void addToWaiters(Lock l){
-//             // 自动覆盖，不需要考虑这个问题
-//            // 而且也不需要考虑 s锁变x锁的问题
-//            waiters.put(l.getTid(),l);
-//        }
         private void moveToOwners(Lock l){
             owners.put(l.getTid(),l);
         }
-
         private boolean checkLock(TransactionId tid){
              return owners.containsKey(tid);
         }
@@ -59,7 +52,6 @@ public class LockManager {
             LockTable.put(pid,e);
             return true;
         }else{
-
             // check the page's owner first
             LockEntry e = LockTable.get(pid);
 //            assert (e.owners.size()>0);
@@ -90,10 +82,10 @@ public class LockManager {
             }
             if(compatiblity){
                 e.moveToOwners(new Lock(tid,lockType));
+                return true;
             }
         }
         return false;
-
     }
 
     public synchronized void updateLockType(LockEntry e,TransactionId tid){
@@ -104,6 +96,18 @@ public class LockManager {
                 entry.getValue().updateType();;
             }
         }
+    }
+
+    public synchronized ConcurrentLinkedDeque<TransactionId> getCurrentOwners(PageId pid){
+        ConcurrentLinkedDeque<TransactionId> res=new ConcurrentLinkedDeque<>();
+
+        if(LockTable.containsKey(pid)){
+            LockEntry e=LockTable.get(pid);
+            for(TransactionId tid:e.owners.keySet()){
+                res.add(tid);
+            }
+        }
+        return res;
     }
 
     public synchronized boolean holdLock(TransactionId tid,PageId pid){
