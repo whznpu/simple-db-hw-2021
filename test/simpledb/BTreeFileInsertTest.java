@@ -113,6 +113,7 @@ public class BTreeFileInsertTest extends SimpleDbTestBase {
 		Map<PageId, Page> dirtypages = new HashMap<>();
 		dirtypages.put(leftPageId, leftPage);
 		dirtypages.put(parentId, parent);
+		System.out.println("origin numEntries:"+leftPage.getNumEntries());
 		BTreeInternalPage page = empty.splitInternalPage(tid, dirtypages, leftPage, field);
 		BTreeInternalPage otherPage;
 		assertEquals(1, parent.getNumEntries());
@@ -127,6 +128,8 @@ public class BTreeFileInsertTest extends SimpleDbTestBase {
 			assertTrue(field.compare(Op.GREATER_THAN_OR_EQ, 
 					otherPage.reverseIterator().next().getKey()));
 		}
+
+		System.out.println("page numEntries:"+page.getNumEntries()+" sibling numEntries:"+otherPage.getNumEntries());
 		
 		int totalEntries = page.getNumEntries() + otherPage.getNumEntries();
 		assertEquals(entriesPerPage - 1, totalEntries);

@@ -131,6 +131,7 @@ public class BufferPoolWriteTest extends TestUtil.CreateHeapFile {
     	// there should now be 10 tuples (on 10 different pages) in the buffer pool
     	DbFileIterator it = hfd.iterator(tid);
     	it.open();
+		// 又是这个地方的问题 看来之前想法没问题，B+tree出问题也是因为bufferpool
     	
     	int count = 0;
     	while(it.hasNext()) {

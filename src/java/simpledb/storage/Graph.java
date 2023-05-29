@@ -9,40 +9,50 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Graph {
     int vNum;
-    ConcurrentHashMap<TransactionId,
-            ConcurrentLinkedDeque<TransactionId>> adj;
-    ConcurrentLinkedDeque<TransactionId> q;
-    ConcurrentHashMap<TransactionId,Integer> indegree;
+    HashMap<TransactionId,
+            LinkedList<TransactionId>> adj;
+   LinkedList<TransactionId> q;
+    HashMap<TransactionId,Integer> indegree;
     public Graph(){
         this.vNum=0;
-        this.adj= new ConcurrentHashMap<>();
-        this.q= new ConcurrentLinkedDeque<>();
-        this.indegree=new ConcurrentHashMap<>();
+        this.adj= new HashMap<>();
+        this.q= new LinkedList<>();
+        this.indegree=new HashMap<>();
     }
     public synchronized void add_edge(TransactionId v,TransactionId w){
+        if(v.equals(w)){
+            return;
+        }
         if(adj.containsKey(v)){
             adj.get(v).add(w);
             if (indegree.containsKey(w)) {
                 indegree.put(w, indegree.get(w) + 1);
             } else {
+                vNum++;
                 indegree.put(w, 1);
             }
         }else{
             vNum++;
-            ConcurrentLinkedDeque list= new ConcurrentLinkedDeque<>();
+            LinkedList list= new LinkedList();
             list.add(w);
             adj.put(v,list);
-            indegree.put(w,1);
+            if (indegree.containsKey(w)) {
+                indegree.put(w, indegree.get(w) + 1);
+            } else {
+                vNum++;
+                indegree.put(w, 1);
+            }
         }
     }
     public synchronized void delete_edge(TransactionId v){
         vNum--;
         adj.remove(v);
     }
+    // 还有本身的环
 
     public synchronized boolean topological_sort(){
         for(TransactionId tid:adj.keySet()){
-            if(indegree.get(tid)==0){
+            if(indegree.get(tid)==null||indegree.get(tid)==0){
                 q.add(tid);
             }
         }
@@ -51,13 +61,16 @@ public class Graph {
             TransactionId ctid=q.getFirst();
             q.pop();
             count++;
-            for(TransactionId tid:adj.get(ctid)){
-                if(indegree.get(tid)==1){
-                    q.add(tid);
-                    indegree.put(tid,indegree.get(tid)-1);
+            if(adj.get(ctid)!=null){
+                for (TransactionId tid : adj.get(ctid)) {
+                    indegree.put(tid, indegree.get(tid) - 1);
+                    if (indegree.get(tid) == 0) {
+                        q.add(tid);
+                    }
                 }
             }
         }
+
 //        System.out.println("vNum:"+vNum+" count:"+count);
         return count<vNum? false:true;
     }

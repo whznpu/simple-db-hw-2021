@@ -9,6 +9,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.IOException;
+import java.io.SyncFailedException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -83,7 +84,13 @@ public class BTreeChecker {
                                        BTreePageId pageId, Field lowerBound, Field upperBound,
                                        BTreePageId parentId, boolean checkOccupancy, int depth) throws
             TransactionAbortedException, DbException {
+
         BTreePage page = (BTreePage )bt.getPage(tid, dirtypages, pageId, Permissions.READ_ONLY);
+        if(!page.getParentId().equals(parentId)) {
+            System.out.println("page's id:" + pageId);
+            System.out.println("page's parent id:" + page.getParentId());
+            System.out.println("parent id:" + parentId);
+        }
         assert(page.getParentId().equals(parentId));
 
         if (page.getId().pgcateg() == BTreePageId.LEAF) {

@@ -67,11 +67,11 @@ public class BTreeFileInsertTest extends SimpleDbTestBase {
 		// one more insert greater than 502 should cause page 2 to split
 		tup = BTreeUtility.getBTreeTuple(753, 2);
 		empty.insertTuple(tid, tup);
+		DbFileIterator it=empty.iterator(tid);
+
 		assertEquals(4, empty.numPages());
 
 		// now make sure the records are sorted on the key field
-		DbFileIterator it = empty.iterator(tid);
-		it.open();
 		int prev = -1;
 		while(it.hasNext()) {
 			Tuple t = it.next();
@@ -203,6 +203,9 @@ public class BTreeFileInsertTest extends SimpleDbTestBase {
 		BTreeEntry e = it.next();
 		BTreeInternalPage leftChild = (BTreeInternalPage) Database.getBufferPool().getPage(tid, e.getLeftChild(), Permissions.READ_ONLY);
 		BTreeInternalPage rightChild = (BTreeInternalPage) Database.getBufferPool().getPage(tid, e.getRightChild(), Permissions.READ_ONLY);
+		// 好像是没刷盘导致的 考虑dirtypage的问题 按说之前弄了啊
+		assertTrue(leftChild.isDirty()==tid);
+		assertTrue(rightChild.isDirty()==tid);
 		assertTrue(leftChild.getNumEmptySlots() <= 252);
 		assertTrue(rightChild.getNumEmptySlots() <= 252);
 
@@ -227,6 +230,44 @@ public class BTreeFileInsertTest extends SimpleDbTestBase {
 			assertTrue(found);
 		}
 	}
+
+//	@Test
+//	public void testSimple() throws Exception{
+//		// For this test we will decrease the size o the Buffer Pool pages
+//		BufferPool.setPageSize(256);
+//		File emptyFile = File.createTempFile("empty", ".dat");
+//		emptyFile.deleteOnExit();
+//		Database.reset();
+//		BTreeFile empty = BTreeUtility.createEmptyBTreeFile(emptyFile.getAbsolutePath(), 10, 0);
+//
+//		Tuple tup = null;
+//		// we should be able to add 6 tuples on one page
+//		for (int i = 0; i < 6; ++i) {
+//			tup = BTreeUtility.getBTreeTuple(i, 10);
+//			empty.insertTuple(tid, tup);
+//			assertEquals(1, empty.numPages());
+//		}
+//		for(int i=6;i<9;i++){
+//			tup=BTreeUtility.getBTreeTuple(i,10);
+//			empty.insertTuple(tid,tup);
+//			assertEquals(3,empty.numPages());
+//		}
+//		for(int i=9;i<10;i++){
+//			tup=BTreeUtility.getBTreeTuple(i,10);
+//			empty.insertTuple(tid,tup);
+//			assertEquals(3,empty.numPages());
+//		}
+//		DbFileIterator it=empty.iterator(tid);
+//		int cur=0;
+//		while (it.hasNext())
+//		{
+//			Tuple t=it.next();
+//			int value=((IntField) t.getField(0)).getValue();
+//			assertTrue(value==cur);
+//			cur++;
+//		}
+//
+//	}
 
 	@Test
 	public void testSplitInternalPage() throws Exception {

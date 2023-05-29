@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -103,21 +104,31 @@ public class BufferPool {
         isacquired=lockManager.getLock(tid,pid,lockType);
         while(!isacquired){
             long now=System.currentTimeMillis();
-            if(now-st>200){
+//            if(now-st>30){
+//                System.out.println("进行判断");
                 for(TransactionId owner:lockManager.getCurrentOwners(pid)){
                     g.add_edge(tid,owner);
+//                    System.out.println("加边: a:"+tid.getId()+" -> b:"+owner.getId());
                 }
                 if(!g.topological_sort()) {
                     // must have a circle
                     // abort itself
                     System.out.println("有环解环 abort tid:"+tid.getId()   );
                     g.delete_edge(tid);
+                    // 加个backofftime
+                    try {
+//                        System.out.println("backofftime");
+                        TimeUnit.MILLISECONDS.sleep(30);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                     throw new TransactionAbortedException();
                 }
-            }
+
+//            }
             isacquired=lockManager.getLock(tid,pid,lockType);
         }
-        System.out.println("Transaction :"+tid.getId()+" get the "+lockType.toString()+"lock on page:"+pid.getPageNumber());
+//        System.out.println("Transaction :"+tid.getId()+" get the "+lockType.toString()+"lock on page:"+pid.getPageNumber());
 
         if(pageCache.containsKey(pid)){
 //            assert (pageCache.size()==pageList.size());
@@ -240,9 +251,14 @@ public class BufferPool {
         }
         List<Page> pageDirtyList=DbFile.insertTuple(tid,t);
         for(Page p:pageDirtyList){
+            // 这最好的办法还是做一个lrucache 我当时没做 通过这个管理比较好
             p.markDirty(true,tid);
+//            if(pageCache.size()==numPages){
+//                evictPage();
+//            }
+            pageCache.put(p.getId(),p);
         }
-        System.out.println("Transaction:"+tid.getId()+" insert "+t.toString()+" into table:"+tableId);
+//        System.out.println("Transaction:"+tid.getId()+" insert "+t.toString()+" into table:"+tableId);
         // not on the disk, but on the bufferpool
     }
 
@@ -269,10 +285,12 @@ public class BufferPool {
         List<Page> pageDirtyList=DbFile.deleteTuple(tid,t);
         for(Page p:pageDirtyList){
             p.markDirty(true,tid);
-//            pageCache.remove(p.getId());
-//            assert (pageList.size()==pageCache.size());
+//            if(pageCache.size()==numPages){
+//                evictPage();
+//            }
+            pageCache.put(p.getId(),p);
         }
-        System.out.println("Transaction:"+tid.getId()+" delete "+t.toString());
+//        System.out.println("Transaction:"+tid.getId()+" delete "+t.toString());
         // some code goes here
 
         // not necessary for lab1
@@ -322,7 +340,7 @@ public class BufferPool {
             pageList.remove(pid);
             pageCache.remove(pid);
             DbFile dbFile=Database.getCatalog().getDatabaseFile(pid.getTableId());
-            System.out.println("page "+p.getId()+" is flushed");
+//            System.out.println("page "+p.getId()+" is flushed");
             dbFile.writePage(p);
             p.markDirty(false,null);
         }
@@ -339,7 +357,7 @@ public class BufferPool {
         pageQueue=lockManager.getPagesLockedBy(tid);
 
         for (PageId pid:pageQueue) {
-            System.out.println("Transaction" +tid.getId()+" flush page:"+pid.getPageNumber());
+//            System.out.println("Transaction" +tid.getId()+" flush page:"+pid.getPageNumber());
             flushPage(pid);
             lockManager.releaseLock(tid,pid);
         }
