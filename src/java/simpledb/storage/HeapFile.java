@@ -51,18 +51,10 @@ public class HeapFile implements DbFile {
             this.tid=tid;
         }
 
-        public Iterator<Tuple> getTupleIterator(int pageId) throws DbException {
+        public Iterator<Tuple> getTupleIterator(int pageId) throws DbException, TransactionAbortedException {
             if(pageId>=0&&pageId< file.numPages()){
                 HeapPageId pid=new HeapPageId(file.getId(), pageId);
-                HeapPage page=null;
-                try{
-                    page= (HeapPage) Database.getBufferPool().getPage(tid,pid,Permissions.READ_ONLY);
-                }
-                catch(TransactionAbortedException e){
-                    e.printStackTrace();
-                }
-
-                if(page==null) throw  new DbException("get iterator fail! pageNo #" + pageId + "# is invalid!");
+                HeapPage page= (HeapPage) Database.getBufferPool().getPage(tid,pid,Permissions.READ_ONLY);
                 return page.iterator();
             }
             throw  new DbException("get iterator fail! pageNo #" + pageId + "# is invalid!");
@@ -72,40 +64,28 @@ public class HeapFile implements DbFile {
         public void open() throws DbException, TransactionAbortedException {
             pageId=0;
             it=getTupleIterator(pageId);
-            while (pageId< file.numPages()&&it==null){
-                pageId++;
-                if(pageId== file.numPages()){
-                    break;
-                }
-                it=getTupleIterator(pageId);
-            }
-            if(pageId== file.numPages()){
-                it=null;
-            }
-
         }
 
         @Override
         public boolean hasNext() throws DbException, TransactionAbortedException {
             if(it==null) return false;
-            if(pageId>= file.numPages()) return false;
-            if(!it.hasNext()&& pageId==file.numPages()-1) return false;
-            return true;
+            while (it!=null&& !it.hasNext()){
+                if(pageId<(file.numPages()-1)){
+                    pageId++;
+                    it=getTupleIterator(pageId);
+                }else{
+                    it=null;
+                }
+            }
+            if(it==null){
+                return false;
+            }
+            return it.hasNext();
         }
 
         @Override
         public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-            if(it==null) throw  new NoSuchElementException("not open");
-            if(!it.hasNext()){
-                pageId++;
-                while (pageId<file.numPages()-1&&null==getTupleIterator(pageId)){
-                    pageId++;
-                }
-                it=getTupleIterator(pageId);
-                if(it==null){
-                    return  null;
-                }
-            }
+            if(it==null|| !it.hasNext()) throw  new NoSuchElementException("not open");
             return it.next();
         }
         @Override

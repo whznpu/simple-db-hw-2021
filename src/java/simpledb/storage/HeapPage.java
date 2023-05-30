@@ -384,9 +384,7 @@ public class HeapPage implements Page {
         for(int i=0;i<numSlots;i++){
             if(isSlotUsed(i)) tupleList.add(tuples[i]);
         }
-        if(tupleList.size()==0) {
-            return null;
-        } else return tupleList.iterator();
+        return tupleList.iterator();
 //        return null;
     }
 
