@@ -341,6 +341,7 @@ public class LogTest extends SimpleDbTestBase {
         t = new Transaction();
         t.start();
         look(hf1, t, 1, true);
+        look(hf1, t,2,true);
         look(hf1, t, 8, false);
         look(hf1, t, 9, false);
         t.commit();
@@ -390,6 +391,7 @@ public class LogTest extends SimpleDbTestBase {
     @Test public void TestOpenCommitCheckpointOpenCrash()
             throws IOException, DbException, TransactionAbortedException {
         setup();
+        // 0
         doInsert(hf1, 1, 2);
 
         // *** Test:
@@ -399,7 +401,7 @@ public class LogTest extends SimpleDbTestBase {
         // T3 inserts but does not commit
         // crash
         // only T2 data should be there
-
+        // 1 丢弃
         Transaction t1 = new Transaction();
         t1.start();
         insertRow(hf1, t1, 12);
@@ -407,10 +409,12 @@ public class LogTest extends SimpleDbTestBase {
         insertRow(hf1, t1, 13);
 
         // T2 commits
+        // 2 提交
         doInsert(hf2, 26, 27);
 
         Database.getLogFile().logCheckpoint();
 
+        // 3 中间有个flush 将未完成的修改持久化了，所以需要撤销
         Transaction t3 = new Transaction();
         t3.start();
         insertRow(hf2, t3, 28);

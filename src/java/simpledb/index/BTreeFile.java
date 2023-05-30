@@ -722,7 +722,6 @@ public class BTreeFile implements DbFile {
         // Move some of the tuples from the sibling to the page so
 		// that the tuples are evenly distributed. Be sure to update
 		// the corresponding parent entry.
-		// 首先理清楚思路
 		// 满足steal
 		assert (page.getNumTuples()<page.getMaxTuples()/2&&page.getNumTuples()+sibling.getNumTuples()>=page.getMaxTuples());
 		// page 在左边 那么sibling 的第一个被page取走
@@ -733,13 +732,12 @@ public class BTreeFile implements DbFile {
 			it=sibling.reverseIterator();
 		}
 		Tuple t=null;
-		// 这边数量很奇怪 他似乎要求必须强制平分
 		while(page.getNumTuples()<(sibling.getNumTuples()+page.getNumTuples())/2) {
 			t = it.next();
 			// 从sibling删除 再插入到page中
 			sibling.deleteTuple(t);
 			page.insertTuple(t);
-		}// 按理说这个循环应该只有一次
+		}//
 		// 更新Parent 中的entry
 		entry.setKey(t.getField(parent.keyField));
 		parent.updateEntry(entry);
@@ -846,9 +844,8 @@ public class BTreeFile implements DbFile {
 		leftSibling.deleteKeyAndRightChild(e);
 		parentEntry.setKey(e.getKey());
 		parent.updateEntry(parentEntry);
-		//
+		// b更新指向page的孩子节点
 		updateParentPointers(tid,dirtypages,page);
-		// 设置脏页
 	}
 	
 	/**
@@ -953,7 +950,6 @@ public class BTreeFile implements DbFile {
 		// 检查parent 如果满足合并条件 递归合并
 		deleteParentEntry(tid,dirtypages,leftPage,parent,parentEntry);
 		// 应该dirtypage不用增加了
-
 	}
 
 	/**
@@ -1009,7 +1005,6 @@ public class BTreeFile implements DbFile {
 		updateParentPointers(tid,dirtypages,leftPage);
 		// 检查parent 在这里面删除parentEntry
 		deleteParentEntry(tid,dirtypages,leftPage,parent,parentEntry);
-
 	}
 	
 	/**

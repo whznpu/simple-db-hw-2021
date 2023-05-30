@@ -98,18 +98,6 @@ public class LockManager {
         }
     }
 
-    public synchronized ConcurrentLinkedDeque<TransactionId> getCurrentOwners(PageId pid){
-        ConcurrentLinkedDeque<TransactionId> res=new ConcurrentLinkedDeque<>();
-
-        if(LockTable.containsKey(pid)){
-            LockEntry e=LockTable.get(pid);
-            for(TransactionId tid:e.owners.keySet()){
-                res.add(tid);
-            }
-        }
-        return res;
-    }
-
     public synchronized boolean holdLock(TransactionId tid,PageId pid){
         if(!LockTable.containsKey(pid)){
             return false;
@@ -126,6 +114,18 @@ public class LockManager {
 
     }
 
+    public synchronized ConcurrentLinkedDeque<TransactionId> getCurrentOwners(PageId pid){
+        ConcurrentLinkedDeque<TransactionId> res=new ConcurrentLinkedDeque<>();
+
+        if(LockTable.containsKey(pid)){
+            LockEntry e=LockTable.get(pid);
+            for(TransactionId tid:e.owners.keySet()){
+                res.add(tid);
+            }
+        }
+        return res;
+    }
+
     public synchronized ConcurrentLinkedDeque<PageId> getPagesLockedBy(TransactionId tid){
         ConcurrentLinkedDeque<PageId> pageQueue=new ConcurrentLinkedDeque<>();
         for(Map.Entry<PageId,LockEntry> entry:LockTable.entrySet()){
@@ -134,6 +134,14 @@ public class LockManager {
             }
         }
         return pageQueue;
+    }
+
+    public  synchronized  void realeaseAllLocks(TransactionId tid){
+        for(Map.Entry<PageId,LockEntry> entry:LockTable.entrySet()){
+            if(entry.getValue().owners.containsKey(tid)){
+                releaseLock(tid, entry.getKey());
+            }
+        }
     }
 
 
